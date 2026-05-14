@@ -9,6 +9,10 @@ class Agentex < Formula
 
   depends_on "python@3.12"
   depends_on "tectonic"
+  # Build-only: cryptography and pydantic-core compile Rust extensions
+  # (via maturin) from sdist. Runtime install only needs the resulting
+  # .dylib, so rust isn't a runtime dep.
+  depends_on "rust" => :build
 
   # -- Python resources -------------------------------------------------------
   # The url/sha256 placeholders below are filled in by:
