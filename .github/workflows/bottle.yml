@@ -1,0 +1,129 @@
+name: Build bottles
+
+# Builds bottles for the current Formula on Apple Silicon + Intel macOS,
+# uploads them as a GitHub Release, then opens a commit that patches
+# `Formula/agentex.rb` with the `bottle do … end` block so end users
+# `brew install` against prebuilt binaries instead of compiling from
+# source. Triggered on every push that touches the formula.
+#
+# First run after a formula bump will TAKE A WHILE (~25-40 min per arch)
+# because every Python dep is built from source. Subsequent runs that
+# only change the bottle block skip rebuild (paths filter).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Formula/agentex.rb'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bottle:
+    name: Build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14   # arm64
+          - os: macos-13   # x86_64 (Intel)
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wire tap to checkout
+        run: |
+          set -euxo pipefail
+          TAPS_DIR="$(brew --repo)/Library/Taps/tonymenzo"
+          mkdir -p "$TAPS_DIR"
+          # Force-replace any preexisting clone so brew sees this PR's formula.
+          rm -rf "$TAPS_DIR/homebrew-agentex"
+          ln -s "$GITHUB_WORKSPACE" "$TAPS_DIR/homebrew-agentex"
+          brew tap | grep tonymenzo/agentex
+
+      - name: Extract version from formula
+        id: ver
+        run: |
+          set -euo pipefail
+          V=$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz' Formula/agentex.rb | head -1 | sed 's/^v//;s/\.tar\.gz$//')
+          if [ -z "$V" ]; then
+            echo "could not extract version from Formula/agentex.rb" >&2
+            exit 1
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "Detected version: $V"
+
+      - name: Build bottle
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_FROM_API: 1
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euxo pipefail
+          brew install --build-bottle --verbose tonymenzo/agentex/agentex
+          # Produces agentex--<version>.<tag>.bottle.tar.gz + .json
+          # in the working directory.
+          brew bottle \
+            --json \
+            --no-rebuild \
+            --root-url=https://github.com/tonymenzo/homebrew-agentex/releases/download/agentex-${{ steps.ver.outputs.version }} \
+            tonymenzo/agentex/agentex
+
+      - name: List artifacts
+        run: ls -la *.bottle.* 2>&1 | sed -n '1,40p'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bottle-${{ matrix.os }}
+          path: |
+            *.bottle.tar.gz
+            *.bottle.json
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: bottle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: bottles
+          merge-multiple: true
+
+      - name: Read version
+        id: ver
+        run: |
+          set -euo pipefail
+          V=$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz' Formula/agentex.rb | head -1 | sed 's/^v//;s/\.tar\.gz$//')
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+      - name: List bottles
+        run: ls -la bottles/
+
+      - name: Create / update release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euxo pipefail
+          TAG="agentex-${{ steps.ver.outputs.version }}"
+          # Delete then recreate so reruns are idempotent.
+          gh release delete "$TAG" --yes 2>/dev/null || true
+          gh release create "$TAG" \
+            --title "agentex ${{ steps.ver.outputs.version }} bottles" \
+            --notes "Automated bottle build for agentex ${{ steps.ver.outputs.version }}." \
+            bottles/*.bottle.tar.gz
+
+      - name: Print bottle DSL for manual paste
+        run: |
+          set -euo pipefail
+          echo "==== PASTE THE FOLLOWING bottle DO BLOCK INTO Formula/agentex.rb ===="
+          for f in bottles/*.bottle.json; do
+            cat "$f"
+            echo
+          done
+          echo "==== Use brew bottle --merge --write to apply automatically ===="

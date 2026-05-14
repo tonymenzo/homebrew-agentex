@@ -3,8 +3,8 @@ class Agentex < Formula
 
   desc "Live LaTeX rendering interface for agent-assisted writing"
   homepage "https://github.com/tonymenzo/agenTeX"
-  url "https://github.com/tonymenzo/agenTeX/archive/refs/tags/v0.1.2.tar.gz"
-  sha256 "0b147a19cd12f325769e8c4690ca16fdf168b13cc87b78580a0060d0f8c3feb0"
+  url "https://github.com/tonymenzo/agenTeX/archive/refs/tags/v0.1.3.tar.gz"
+  sha256 "72336ac7260ee8cd9336bf4e91aa2066de561dd5bb1170ebdbfdefc349eb6205"
   license "MIT"
 
   depends_on "python@3.12"
