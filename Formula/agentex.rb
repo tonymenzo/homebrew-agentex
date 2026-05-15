@@ -3,16 +3,17 @@ class Agentex < Formula
 
   desc "Live LaTeX rendering interface for agent-assisted writing"
   homepage "https://github.com/tonymenzo/agenTeX"
-  url "https://github.com/tonymenzo/agenTeX/archive/refs/tags/v0.1.3.tar.gz"
-  sha256 "72336ac7260ee8cd9336bf4e91aa2066de561dd5bb1170ebdbfdefc349eb6205"
+  url "https://github.com/tonymenzo/agenTeX/archive/refs/tags/v0.1.4.tar.gz"
+  sha256 "a389aba2c2f50e14c6d840daa18e14a56e1871d361702c19ff8b3b705bba3fe0"
   license "MIT"
 
-  depends_on "python@3.12"
-  depends_on "tectonic"
   # Build-only: cryptography and pydantic-core compile Rust extensions
   # (via maturin) from sdist. Runtime install only needs the resulting
   # .dylib, so rust isn't a runtime dep.
   depends_on "rust" => :build
+
+  depends_on "python@3.12"
+  depends_on "tectonic"
 
   # -- Python resources -------------------------------------------------------
   # The url/sha256 placeholders below are filled in by:
