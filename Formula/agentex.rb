@@ -26,6 +26,7 @@ class Agentex < Formula
   depends_on "libpng"
   depends_on "libtiff"
   depends_on "little-cms2"
+  depends_on "openblas"
   depends_on "openjpeg"
   depends_on "python@3.12"
   depends_on "tectonic"
