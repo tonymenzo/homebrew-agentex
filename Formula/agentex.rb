@@ -12,8 +12,20 @@ class Agentex < Formula
   # .dylib, so rust isn't a runtime dep.
   depends_on "rust" => :build
 
+  # Pillow image libs. Pulled in transitively by orchestral-ai's
+  # multimodal helpers; the sdist hard-fails its build without these
+  # headers on the system. Match homebrew/core's pillow recipe so the
+  # installed PIL has full format support (PNG / JPEG / TIFF / WebP /
+  # JPEG2000 / freetype / ICC).
+  depends_on "freetype"
+  depends_on "jpeg-turbo"
+  depends_on "libpng"
+  depends_on "libtiff"
+  depends_on "little-cms2"
+  depends_on "openjpeg"
   depends_on "python@3.12"
   depends_on "tectonic"
+  depends_on "webp"
 
   # -- Python resources -------------------------------------------------------
   # The url/sha256 placeholders below are filled in by:
