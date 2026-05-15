@@ -7,9 +7,13 @@ class Agentex < Formula
   sha256 "a389aba2c2f50e14c6d840daa18e14a56e1871d361702c19ff8b3b705bba3fe0"
   license "MIT"
 
-  # Build-only: cryptography and pydantic-core compile Rust extensions
-  # (via maturin) from sdist. Runtime install only needs the resulting
-  # .dylib, so rust isn't a runtime dep.
+  # Build-only compilers for native Python deps:
+  #   gcc  -> gfortran, needed by scipy's meson build
+  #   rust -> cryptography and pydantic-core compile Rust extensions
+  #           (via maturin) from sdist
+  # Runtime install only needs the resulting .dylibs, so neither is a
+  # runtime dep.
+  depends_on "gcc" => :build
   depends_on "rust" => :build
 
   # Pillow image libs. Pulled in transitively by orchestral-ai's
