@@ -7,6 +7,11 @@ class Agentex < Formula
   sha256 "a389aba2c2f50e14c6d840daa18e14a56e1871d361702c19ff8b3b705bba3fe0"
   license "MIT"
 
+  bottle do
+    root_url "https://github.com/tonymenzo/homebrew-agentex/releases/download/agentex-0.1.4"
+    sha256 cellar: :any, arm64_sonoma: "579082cdfe418cacc3997264320944fc4b9cfdb56d9e72f1f3da4643750101e6"
+  end
+
   # Build-only compilers for native Python deps:
   #   gcc  -> gfortran, needed by scipy's meson build
   #   rust -> cryptography and pydantic-core compile Rust extensions

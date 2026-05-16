@@ -85,6 +85,11 @@ jobs:
   release:
     name: Publish release
     needs: bottle
+    # Run the publish step even when one matrix arch failed or was cancelled
+    # — Intel macOS runner availability is patchy, and a missing macos-13
+    # build shouldn't block shipping the arm64 bottle. We bail gracefully
+    # below if zero bottles were produced.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -95,17 +100,31 @@ jobs:
           path: bottles
           merge-multiple: true
 
+      - name: Check we have at least one bottle
+        id: gate
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          FILES=(bottles/*.bottle.tar.gz)
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "::warning::No bottle artifacts produced; skipping release publish."
+            echo "have_bottles=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found ${#FILES[@]} bottle(s):"
+            printf '  %s\n' "${FILES[@]}"
+            echo "have_bottles=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Read version
+        if: steps.gate.outputs.have_bottles == 'true'
         id: ver
         run: |
           set -euo pipefail
           V=$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz' Formula/agentex.rb | head -1 | sed 's/^v//;s/\.tar\.gz$//')
           echo "version=$V" >> "$GITHUB_OUTPUT"
 
-      - name: List bottles
-        run: ls -la bottles/
-
       - name: Create / update release
+        if: steps.gate.outputs.have_bottles == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -119,6 +138,7 @@ jobs:
             bottles/*.bottle.tar.gz
 
       - name: Print bottle DSL for manual paste
+        if: steps.gate.outputs.have_bottles == 'true'
         run: |
           set -euo pipefail
           echo "==== PASTE THE FOLLOWING bottle DO BLOCK INTO Formula/agentex.rb ===="
