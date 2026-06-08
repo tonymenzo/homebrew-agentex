@@ -7,6 +7,11 @@ class Agentex < Formula
   sha256 "38bbcca258f708ceb67030e268bdbb1e82b1210efd6df4407f23fc7d122a983e"
   license "MIT"
 
+  bottle do
+    root_url "https://github.com/tonymenzo/homebrew-agentex/releases/download/agentex-0.1.9"
+    sha256 cellar: :any, arm64_sonoma: "f096b610e6f5b31943ca2b79e1aed0fdf2faadde993d73cb17893edb3821a8ad"
+  end
+
   # rust builds the Rust extensions in cryptography and pydantic-core from
   # sdist; runtime only needs the resulting .dylibs, so it's build-only.
   # numpy/scipy/matplotlib/pandas/pillow were dropped when orchestral-ai went
