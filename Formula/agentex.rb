@@ -3,14 +3,9 @@ class Agentex < Formula
 
   desc "Live LaTeX rendering interface for agent-assisted writing"
   homepage "https://github.com/tonymenzo/agenTeX"
-  url "https://github.com/tonymenzo/agenTeX/archive/refs/tags/v0.1.8.tar.gz"
-  sha256 "354bcf15447cc0e1678796d4242e34798b74f4c1445f2cf21464c9f9fab88b79"
+  url "https://github.com/tonymenzo/agenTeX/archive/refs/tags/v0.1.9.tar.gz"
+  sha256 "38bbcca258f708ceb67030e268bdbb1e82b1210efd6df4407f23fc7d122a983e"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/tonymenzo/homebrew-agentex/releases/download/agentex-0.1.8"
-    sha256 cellar: :any, arm64_sonoma: "53026da6cd4720fd57aa3a9c2e10c4cd522d71551f4ce03b0a4c6276b3331677"
-  end
 
   # rust builds the Rust extensions in cryptography and pydantic-core from
   # sdist; runtime only needs the resulting .dylibs, so it's build-only.
